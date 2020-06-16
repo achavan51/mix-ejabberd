@@ -1,0 +1,167 @@
+include_config_file:
+  - macros.yml
+  - ejabberd.extauth.yml
+  - ejabberd.ldap.yml
+  - ejabberd.mnesia.yml
+  - ejabberd.mysql.yml
+  - ejabberd.mssql.yml
+  - ejabberd.pgsql.yml
+  - ejabberd.redis.yml
+  - ejabberd.sqlite.yml
+
+host_config:
+  pgsql.localhost: PGSQL_CONFIG
+  sqlite.localhost: SQLITE_CONFIG
+  mysql.localhost: MYSQL_CONFIG
+  mssql.localhost: MSSQL_CONFIG
+  mnesia.localhost: MNESIA_CONFIG
+  redis.localhost: REDIS_CONFIG
+  ldap.localhost: LDAP_CONFIG
+  extauth.localhost: EXTAUTH_CONFIG
+  localhost:
+    auth_method:
+      - internal
+      - anonymous
+
+hosts:
+  - localhost
+  - mnesia.localhost
+  - redis.localhost
+  - mysql.localhost
+  - mssql.localhost
+  - pgsql.localhost
+  - extauth.localhost
+  - ldap.localhost
+  - sqlite.localhost
+
+shaper_rules:
+  c2s_shaper:
+    none: admin
+    normal: all
+  max_user_offline_messages:
+    infinity: all
+  max_user_sessions:
+    10: all
+  s2s_shaper:
+    fast: all
+
+access_rules:
+  announce:
+    allow: admin
+  c2s:
+    deny: blocked
+    allow: all
+  configure:
+    allow: admin
+  local:
+    allow: local
+  muc:
+    allow: all
+  muc_admin:
+    allow: admin
+  muc_create:
+    allow: local
+  pubsub_createnode:
+    allow: local
+  register:
+    allow: all
+
+acl:
+  local:
+    user_regexp: ""
+  admin:
+    user: "admin"
+language: en
+listen:
+  -
+    port: C2S_PORT
+    module: ejabberd_c2s
+    max_stanza_size: 65536
+    zlib: true
+    starttls: true
+    tls_verify: true
+    shaper: c2s_shaper
+    access: c2s
+  -
+    port: S2S_PORT
+    module: ejabberd_s2s_in
+  -
+    port: WEB_PORT
+    module: ejabberd_http
+    request_handlers:
+      "/admin": ejabberd_web_admin
+      "/api": mod_http_api
+      "/upload": mod_http_upload
+      "/captcha": ejabberd_captcha
+  -
+    port: STUN_PORT
+    module: ejabberd_stun
+    transport: udp
+    use_turn: true
+    turn_ip: "203.0.113.3"
+  -
+    port: COMPONENT_PORT
+    module: ejabberd_service
+    password: PASSWORD
+loglevel: LOGLEVEL
+max_fsm_queue: 1000
+queue_type: file
+modules:
+  mod_adhoc: []
+  mod_announce: []
+  mod_configure: []
+  mod_disco: []
+  mod_ping: []
+  mod_proxy65:
+    port: PROXY_PORT
+    vcard: VCARD
+  mod_muc:
+    vcard: VCARD
+  mod_muc_admin: []
+  mod_carboncopy: []
+  mod_jidprep: []
+  mod_mam: []
+  mod_last: []
+  mod_register:
+    welcome_message:
+      subject: "Welcome!"
+      body: "Hi.
+Welcome to this XMPP server."
+  mod_stats: []
+  mod_s2s_dialback: []
+  mod_legacy_auth: []
+  mod_stream_mgmt:
+    max_ack_queue: 10
+    resume_timeout: 3
+  mod_stun_disco:
+    secret: "cryptic"
+    services:
+      -
+        host: "example.com"
+        type: turns
+  mod_time: []
+  mod_version: []
+  mod_http_upload:
+    docroot: PRIV_DIR
+    put_url: PUT_URL
+    get_url: GET_URL
+    max_size: 10000
+    vcard: VCARD
+registration_timeout: infinity
+route_subdomains: s2s
+s2s_use_starttls: false
+ca_file: CAFILE
+c2s_cafile: CAFILE
+outgoing_s2s_port: S2S_PORT
+shaper:
+  fast: 50000
+  normal: 10000
+certfiles:
+  - CERTFILE
+
+new_sql_schema: NEW_SCHEMA
+
+api_permissions:
+  "public commands":
+    who: all
+    what: "*"
